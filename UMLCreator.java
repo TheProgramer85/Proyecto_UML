@@ -39,4 +39,107 @@ public class UMLCreator extends JFrame implements ActionListener{
     ButtonGroup btn;
     MiPanel miPanel;
 
+    public UMLCreator(){
+        crearmenu();
+        addListeners();
+        miPanel = new MiPanel();
+        this.add( miPanel );
+        this.setSize(800,600);
+        this.setVisible(true);
+        this.setResizable(false);
+        this.setLocationRelativeTo(null);
+        this.setTitle("UML-Creator: ");
+    }
+    private void addListeners(){
+        Acerca.addActionListener(this);
+        Salir.addActionListener(this);
+        Nuevo.addActionListener(this);
+        Guardar.addActionListener(this);
+        Abrir.addActionListener(this);
+        Color.addActionListener(this); /* Opcional */
+        Linea.addActionListener(this);
+        Rectangulo.addActionListener(this);
+        Elipse.addActionListener(this);
+        Relleno.addActionListener(this); /* Opcional */
+    }
+    public void crearmenu() {     /* Cambiar nombres egun corresponda */
+        JMenuBar menu = new JMenuBar();
+        Archivo = new JMenu("Archivo");
+        Nuevo = new JMenuItem("Nuevo");
+        Abrir = new JMenuItem("Abrir archivo existente");
+        Guardar = new JMenuItem("Guardar como: ");
+        Salir = new JMenuItem("Salir");
+        Archivo.add(Nuevo);
+        Archivo.add(Abrir);
+        Archivo.add(Guardar);
+        Archivo.add(Salir);
+        Archivo.add(Archivo);
+        Dibujar = new JMenu("Dibujar");
+        btn = new ButtonGroup();
+        Linea = new JRadioButtonMenuItem("Linea");
+        Rectangulo = new JRadioButtonMenuItem("Rectangulo");
+        Elipse = new JRadioButtonMenuItem("Elipse");
+        btn.add(Elipse);
+        btn.add(Rectangulo);
+        btn.add(Linea);
+        btn.setSelected(Linea.getModel(), true);
+        Relleno = new JCheckBoxMenuItem("Relleno");
+        Color = new JMenuItem("Color");
+        Dibujar.add(Linea);
+        Dibujar.add(Rectangulo);
+        Dibujar.add(Elipse);
+        Dibujar.add(Relleno);
+        Dibujar.add(Color);
+        menu.add(Dibujar);
+        Ayuda = new JMenu("Más");
+        Acerca = new JMenuItem("Hecho por TheProgramer85");
+        Ayuda.add(Acerca);
+        menu.add(Ayuda);
+        this.setJMenuBar(menu);
+    }
+    public static void main ( String[] args ){
+        UML miVentana = new UML();
+        miVentana.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+    }
+    public void actionPerformed(ActionEvent e){
+        if(e.getSource() == Nuevo){
+            miPanel.resetAll();
+        }
+        if(e.getSource() == Abrir){
+            miPanel.Abrir();
+        }
+        if(e.getSource() == Guardar){
+            miPanel.Guardar();
+        }
+        if(e.getSource() == Salir){
+            System.exit(0);
+        }
+        if(e.getSource() == Linea){
+            miPanel.Linea = true;
+            miPanel.Rectangulo = false;
+        }
+         if(e.getSource() == Rectangulo){
+             miPanel.Linea = false;
+             miPanel.Rectangulo = true;
+         }
+         if(e.getSource() == Elipse){
+             miPanel.Linea = false;
+             miPanel.Rectangulo = false;
+         }
+         if(e.getSource() == Relleno){
+             if(miPanel.Relleno){
+                 miPanel.Relleno = false;
+             }else{
+                 miPanel.Relleno = true;
+             }
+         }
+         if(e.getSource() == Color){
+             Color color = JColorChooser.showDialog(this, "Elija un color", this.miPanel.getColorActual());
+             this.miPanel.setColorActual(color);
+         }
+         if(e.getSource() == Acerca){
+             JOptionPane.showMessageDialog(null,"Diego Ignacio Villablanca Gonzalez");
+         }
+
+    }
 }
