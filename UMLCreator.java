@@ -140,6 +140,26 @@ public class UMLCreator extends JFrame implements ActionListener{
          if(e.getSource() == Acerca){
              JOptionPane.showMessageDialog(null,"Diego Ignacio Villablanca Gonzalez");
          }
-
     }
 }
+
+class MiPanel extends JPanel{
+    Point p1;
+    Point p2;
+    Shape figura;
+    Random R = new Random();
+    public Color coloractual = Color.WHITE;
+    BufferedImage myImage;
+    Graphics2D g2D;
+    boolean rectangulo = false; /*Cambiar nombres segun corresponda*/
+    boolean linea = true;
+    boolean relleno = false;
+
+    public MiPanel(){
+        OyenteDeRaton = MiOyente = new OyenteDeRaton();
+        OyenteDeMovimiento = MiOyente2 = new OyenteDeMovimiento();
+        addMouseListener( MiOyente );
+        addMouseMotionListener( MiOyente2 );
+    }
+}
+
