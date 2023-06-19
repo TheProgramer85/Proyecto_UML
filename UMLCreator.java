@@ -16,6 +16,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Point2D;
 import java.awt.Shape;
 import java.awt.geom.Ellipse2D; /* Buscar librerias con mas formas */
 import java.awt.geom.Line2D;
@@ -98,48 +99,89 @@ public class UMLCreator extends JFrame implements ActionListener{
         this.setJMenuBar(menu);
     }
     public static void main ( String[] args ){
-        UML miVentana = new UML();
+        UMLCreator miVentana = new UMLCreator();
         miVentana.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     }
     public void actionPerformed(ActionEvent e){
         if(e.getSource() == Nuevo){
-            miPanel.resetAll();
+            miPanel.abrir(); /*Ojo aqui*/
         }
         if(e.getSource() == Abrir){
-            miPanel.Abrir();
+            miPanel.abrir();
         }
         if(e.getSource() == Guardar){
-            miPanel.Guardar();
+            miPanel.guardar();
         }
         if(e.getSource() == Salir){
             System.exit(0);
         }
         if(e.getSource() == Linea){
-            miPanel.Linea = true;
-            miPanel.Rectangulo = false;
+            miPanel.linea = true;
+            miPanel.rectangulo = false;
         }
          if(e.getSource() == Rectangulo){
-             miPanel.Linea = false;
-             miPanel.Rectangulo = true;
+             miPanel.linea = false;
+             miPanel.rectangulo = true;
          }
          if(e.getSource() == Elipse){
-             miPanel.Linea = false;
-             miPanel.Rectangulo = false;
+             miPanel.linea = false;
+             miPanel.rectangulo = false;
          }
          if(e.getSource() == Relleno){
-             if(miPanel.Relleno){
-                 miPanel.Relleno = false;
+             if(miPanel.relleno){
+                 miPanel.relleno = false;
              }else{
-                 miPanel.Relleno = true;
+                 miPanel.relleno = true;
              }
          }
-         if(e.getSource() == Color){
+         if(e.getSource() == Color){ /*Ojo aca*/
              Color color = JColorChooser.showDialog(this, "Elija un color", this.miPanel.getColorActual());
-             this.miPanel.setColorActual(color);
+             this.miPanel.getColorActual(Color);
          }
          if(e.getSource() == Acerca){
              JOptionPane.showMessageDialog(null,"Diego Ignacio Villablanca Gonzalez");
          }
+    }
+
+    public Graphics2D crearGraphics2D() {
+        Graphics2D g2 = null;
+        if (myImage == null || myImage.getWidth() != getSize().width ||
+                myImage.getHeight() != getSize().height) {
+            myImage = (BufferedImage) createImage(getSize().width, getSize().height);
+        }
+
+        if (myImage != null) {
+            g2 = myImage.createGraphics();
+            g2.setColor(coloractual);
+            g2.setBackground(getBackground());
+        }
+        g2.clearRect(0, 0, getSize().width, getSize().height);
+        return g2;
+    }
+    public void paintComponents(Graphics g){ /* O paintComponent en 160 y 161*/
+        super.paintComponents(g);
+        if(myImage == null){
+            g2D = crearGraphics2D();
+        }
+        if(figura != null){
+            if(relleno){
+                g2D.setColor(coloractual);
+                g2D.draw(figura);
+                g2D.fill(figura);
+            }else{
+                g2D.setColor(coloractual);
+                g2D.draw(figura);
+            }
+            if (myImage != null && isShowing()){
+                g.drawImage(myImage, 0, 0, this);
+            }
+            figura = null;
+        }
+    }
+    public void resetAll(){
+        myImage = null;
+
+        repaint();
     }
 }
 
@@ -155,11 +197,181 @@ class MiPanel extends JPanel{
     boolean linea = true;
     boolean relleno = false;
 
+    public Shape crearFigura(Point p1, Point p2){
+        double xInicio = Math.min(p1.getX(), p2.getX());
+        double yInicio = Math.min(p1.getY(), p2.getY());
+        double ancho = Math.abs(p2.getX() - p1.getX());
+        double altura = Math.abs(p2.getY() - p1.getY());
+        Shape nuevaFigura = new Rectangulo2D.Double(xInicio, yInicio, ancho, altura);
+        return nuevaFigura;
+    }
+    public Shape crearLinea(Point p1, Point p2){
+        Shape nuevaFigura = new Line2D.Double(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+        return nuevaFigura;
+    }
+    public Shape crearElpise(Point p1, Point p2){
+        double xInicio = Math.min(p1.getX(), p2.getX());
+        double yInicio = Math.min(p1.getY(), p2.getY());
+        double ancho = Math.abs(p2.getX() - p1.getX());
+        double altura = Math.abs(p2.getY() - p1.getY());
+        Shape nuevaFigura = new Ellipse2D.Double(xInicio, yInicio, ancho, altura);
+        return nuevaFigura;
+    }
+
     public MiPanel(){
         OyenteDeRaton = MiOyente = new OyenteDeRaton();
         OyenteDeMovimiento = MiOyente2 = new OyenteDeMovimiento();
         addMouseListener( MiOyente );
         addMouseMotionListener( MiOyente2 );
     }
+    class OyenteDeRaton extends MouseAdapter{
+        public void mousePressed(MouseEvent evento){
+            MiPanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+            p1 = evento.getPoint();
+        }
+        public void mouseReleased(MouseEvent evento){
+            MiPanel.this.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+            if(rectangulo){
+                p2 = evento.getPoint();
+                figura = crearLinea(p1, p2);
+                repaint();
+            }else{
+                if(linea){
+                    p2 = evento.getPoint();
+                    figura = crearLinea(p1, p2);
+                    repaint();
+                }else{
+                    p2 = evento.getPoint();
+                    figura = crearElpise(p1, p2);
+                    repaint();
+                }
+            }
+        }
+    }
+    class OyenteDeMovimiento extends MouseMotionAdapter{
+        public void mouseDragged(MouseEvent evento){
+            Graphics2D g2D;
+            if(rectangulo){
+                if(figura != null){
+                    g2D = (Graphics2D) MiPanel.this.getGraphics();
+                    g2D.setXORMode(MiPanel.this.getBackground());
+                    g2D.setColor(coloractual);
+                    g2D.draw(figura);
+                }
+                p2 = evento.getPoint();
+                figura = crearFigura(p1, p2);
+                g2D = (Graphics2D) MiPanel.this.getGraphics();
+                g2D.setXORMode(MiPanel.this.getBackground());
+                g2D.setColor(coloractual);
+                g2D.draw(figura);
+            }else if(linea){
+                if(figura != null){
+                    g2D = (Graphics2D) MiPanel.this.getGraphics();
+                    g2D.setXORMode(MiPanel.this.getBackground());
+                    g2D.setColor(coloractual);
+                    g2D.draw(figura);
+                }
+                p2 = evento.getPoint();
+                figura = crearLinea(p1, p2);
+                g2D = (Graphics2D) MiPanel.this.getGraphics();
+                g2D.setXORMode(MiPanel.this.getBackground());
+                g2D.setColor(coloractual);
+                g2D.draw(figura);
+            }else{
+                if(figura != null){
+                    g2D = (Graphics2D) MiPanel.this.getGraphics();
+                    g2D.setXORMode(MiPanel.this.getBackground());
+                    g2D.setColor(coloractual);
+                    g2D.draw(figura);
+                }
+                p2 = evento.getPoint();
+                figura = crearElpise(p1, p2);
+                g2D = (Graphics2D) MiPanel.this.getGraphics();
+                g2D.setXORMode(MiPanel.this.getBackground());
+                g2D.setColor(coloractual);
+                g2D.draw(figura);
+            }
+        }
+    }
+    public void abrir(){
+        try{
+            JFileChooser jfc = createJFileChooser();
+            jfc.showOpenDialog(this);
+            File file = jfc.getSelectedFile();
+            if (file == null){
+                return;
+            }
+            myImage = javax.imageio.ImageIO.read(file);
+            int w = myImage.getWidth(null);
+            int h = myImage.getHeight(null);
+            if(myImage.getType() != BufferedImage.TYPE_INT_RGB){
+                BufferedImage bi2 = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+                Graphics big = bi2.getGraphics();
+                big.drawImage(myImage, 0 , 0, null);
+            }
+            g2D = (Graphics2D) myImage.getGraphics();
+            repaint();
+        }catch (IOException e){
+            System.exit(1);
+        }
+    }
+    public void guardar(){
+        try {
+            JFileChooser jfc = createJFileChooser();
+            jfc.showSaveDialog(this);
+            File file = jfc.getSelectedFile();
+            if(file == null){
+                return;
+            }
+            javax.swing.filechooser.FileFilter ff = jfc.getFileFilter();
+            String fileName = file.getName();
+            String extension = "jpg";
+            if(ff instanceof MyFileFilter){
+                extension =((MyFileFilter)ff).getExtension();
+            }
+            fileName = fileName + "." + extension;
+            file = new File(file.getParent(), fileName);
+            javax.imageio.ImageIO.write(myImage, extension, file);
+        }catch(Exception e){
+            System.out.println(e);
+        }
+    }
+    public JFileChooser createJFileChooser(){
+        JFileChooser jfc = new JFileChooser();
+        jfc.setAcceptAllFileFilterUsed(false);
+        String [] fileTypes = getFormats();
+        for(int i=0; i<fileTypes.length; i++){
+            jfc.addChoosableFileFilter(new MyFileFilter(fileTypes[i], fileTypes[i] + "file"));
+        }
+        return jfc;
+    }
+    public String[] getFormats(){
+        String[] formats = javax.imageio.ImageIO.getWriterFormatNames();
+        java.util.TreeSet<String> formatSet = new java.util.TreeSet<String>();
+        for(String s: formats){
+            formatSet.add(s.toLowerCase());
+        }
+        return formatSet.toArray(new String[0]);
+    }
+    class MyFileFilter extends javax.swing.filechooser.FileFilter{
+        private String extension;
+        private String description;
+        public MyFileFilter(String extension, String description){
+            this.extension = extension;
+            this.description = description;
+        }
+        public boolean accept (File f){
+            return f.getName().toLowerCase().endsWith("." + extension) || f.isDirectory();
+        }
+        public String getDescription(){
+            return description;
+        }
+        public String getExtension(){
+            return extension;
+        }
+    }
 }
+
+
+
 
